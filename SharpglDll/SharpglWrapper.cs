@@ -3,102 +3,58 @@ using SharpGL;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-
+using System.Linq;
+using LK.Caculation;
 namespace SharpglWrapper
 {
-    public enum DrawType
+
+    public class Camera
     {
-        不绘制,
-        绘制例子,
-        绘制点云,
-    }
+        float x, y, z;
+        float rotateX, rotateY, rotateZ;
 
-
-    interface ISharpglWrapperPara
-    {
-        //视窗中心的位置
-        float CurrentX
-        {
-            get;
-        }
-        float CurrentY
-        {
-            get;
-        }
-        float CurrentZ
-        {
-            get;
-        }
-        //视窗中心的旋转角度
-        float RotateX
-        {
-            get;
-
-        }
-        float RotateY
-        {
-            get;
-
-        }
-        float RotateZ
-        {
-            get;
-        }
-        float Zoom
-        {
-            get;
-        }
-         PointcloudF Pointcloud
-        {
-            get;
-        }
-        //是否绘制点云颜色
-        bool RenderColor
-        {
-            get;
-        }
-    }
-    public class SharpglAction: ISharpglWrapperPara
-    {
-        //点云
-        PointcloudF pointcloud;    
-        public PointcloudF Pointcloud
+        public float CamPosX
         {
             get
             {
-                return pointcloud;
+                return x;
+            }
+            set
+            {
+                x = value;
             }
         }
-        //视窗中心的位置
-        protected float currentX, currentY, currentZ, rotateX, rotateY, rotateZ;
-        protected float zoom;
-        public float CurrentX
+        public float CamPosY
         {
             get
             {
-                return currentX;
+                return y;
+            }
+            set
+            {
+                y = value;
             }
         }
-        public float CurrentY
+        public float CamPosZ
         {
             get
             {
-                return currentY;
+                return z;
             }
-        }
-        public float CurrentZ
-        {
-            get
+            set
             {
-                return currentZ;
+                z = value;
             }
         }
-        //视窗中心的旋转角度
         public float RotateX
         {
             get
             {
                 return rotateX;
+            }
+            set
+            {
+                rotateX = value;
             }
         }
         public float RotateY
@@ -107,6 +63,10 @@ namespace SharpglWrapper
             {
                 return rotateY;
             }
+            set
+            {
+                rotateY = value;
+            }
         }
         public float RotateZ
         {
@@ -114,260 +74,334 @@ namespace SharpglWrapper
             {
                 return rotateZ;
             }
+            set
+            {
+                rotateZ = value;
+            }
         }
-        public float Zoom
+
+
+        public Camera()
+        {
+            x = 0;
+            y = 0;
+            z = 5;
+            rotateX = 0;
+            rotateY = 0;
+            rotateZ = 180;
+        }
+        public void UpdateMove(OpenGL gl)
+        {
+            //gl.Translate()控制模型的运动，
+            //模型与相机之间的相对运动关系是反向的
+            //如果相机想要Z轴抬高，
+            //等效于相机不动，模型向下运动
+            gl.Translate(-CamPosX, -CamPosY, -CamPosZ);
+        }
+
+        public void UpdateRotate(OpenGL gl)
+        {
+           gl.Rotate(-RotateX, -RotateY, -RotateZ);
+        }
+        public void UpdateRotate(OpenGL gl,float centerX,
+            float centerY,float centerZ)
+        {
+           
+           //gl.Ortho
+            gl.Rotate(-RotateX, 1, 0, 0);
+            gl.Rotate(-RotateY, 0, 1, 0);
+            //gl.Rotate(RotateX, centerX, centerY, centerZ);
+            //gl.Rotate(RotateY, centerX, centerY, centerZ);
+
+        }
+    }
+
+    public class Model
+    {
+        private int sample;
+        private float x1, x2, y1, y2, z1, z2,xMean,yMean,zMean;
+        private PointcloudF pointcloud;
+        public float XMin
         {
             get
             {
-                return zoom;
+                return x1;
             }
         }
-        //是否绘制点云颜色
+        public float YMin
+        {
+            get
+            {
+                return y1;
+            }
+        }
+        public float ZMin
+        {
+            get
+            {
+                return z1;
+            }
+        }
+        public float XMax
+        {
+            get
+            {
+                return x2;
+            }
+        }
+        public float YMax
+        {
+            get
+            {
+                return y2;
+            }
+        }
+        public float ZMax
+        {
+            get
+            {
+                return z2;
+            }
+        }
+        public float XMean
+        {
+            get
+            {
+                return xMean;
+            }
+        }
+        public float YMean
+        {
+            get
+            {
+                return yMean;
+            }
+        }
+        public float ZMean
+        {
+            get
+            {
+                return zMean;
+            }
+        }
         public bool RenderColor
         {
-            get;
-            set;
+            get; set;
         }
-
-
-        //鼠标按下绘制事件所需要的内容
-        protected bool eventLock = false;
-        protected bool isMouseDown = false;
-        protected int clickX, clickY;
-        protected float ddx = 0, ddy = 0;
-        //绘制的方式
-        protected uint model;
-        protected DrawType drawType;
-        //绘制的对象
-        protected OpenGLControl SW;
-        //光照
-        protected float[] lightPos = new float[] { -1, -3, -1, 1 };
-        protected IList<double[]> viewDefaultPos = new List<double[]>();
-        protected double[] lookatValue = { 1, 1, 2, 0, 0, 0, 0, 1, 0 };
-        protected IList<float[]> lightColor = new List<float[]>();
-        protected void SetLightColor(OpenGL gl)
+        public int Sample
         {
-            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_AMBIENT, lightColor[0]);//环境光
-            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_DIFFUSE, lightColor[1]);//漫反射
-            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_SPECULAR, lightColor[2]);//镜面光
+            get
+            {
+                return sample;
+            }
+            set
+            {
+                if (value <= 0)
+                    throw new Exception("值不能小于0");
+                sample = value;
+            }
         }
-
-
-        /**界面旋转，拖动，伸缩(未完成),绘制(必须做完)
-         * **/
-        public void AddEvent()
+        public PointcloudF Pointcloud
         {
-            if (eventLock)
-                return;
-            eventLock = !eventLock;
-            SW.MouseWheel += new MouseEventHandler(SW_MouseWheel);
-            SW.MouseDown += new MouseEventHandler(SW_MouseDown);
-            SW.MouseMove += new MouseEventHandler(SW_MouseMove);
-            SW.MouseUp += new MouseEventHandler(SW_MouseUp);
-            SW.OpenGLInitialized += new System.EventHandler(SW_OpenGLInit);
-            SW.OpenGLDraw += new SharpGL.RenderEventHandler(SW_OpenGLDraw);
-            SW.Resize += new System.EventHandler(SW_Resize);
+            get
+            {
+                return pointcloud;
+            }
         }
-        public void CancelEvent()
+
+        public Model()
         {
-            if (!eventLock)
-                return;
-            eventLock = !eventLock;
-            SW.MouseWheel -= new MouseEventHandler(SW_MouseWheel);
-            SW.MouseDown -= new MouseEventHandler(SW_MouseDown);
-            SW.MouseMove -= new MouseEventHandler(SW_MouseMove);
-            SW.MouseUp -= new MouseEventHandler(SW_MouseUp);
-            SW.OpenGLInitialized -= new System.EventHandler(SW_OpenGLInit);
-            SW.OpenGLDraw -= new SharpGL.RenderEventHandler(SW_OpenGLDraw);
-            SW.Resize -= new System.EventHandler(SW_Resize);
+            sample = 5;
+            float[] x = new float[3] { -1, 0, 1 };
+            float[] y = x;
+            float[] z = x;
+            pointcloud = new PointcloudF(x, y, z);
         }
+        
 
-
-        public void SetDraw(DrawType drawType = DrawType.绘制例子)
+        public void UpdateModel(PointcloudF pcIn)
         {
-            this.drawType = drawType;
+            
+            x1 = Caculation.Min(pcIn.X);//-1
+            y1 = Caculation.Min(pcIn.Y);//-1
+            z1 = Caculation.Min(pcIn.Z);//0
+            x2 = Caculation.Max(pcIn.X);//2.5
+            y2 = Caculation.Max(pcIn.Y);//0.5
+            z2 = Caculation.Max(pcIn.Z);//3.5
+            xMean = Caculation.Min(pcIn.X);
+            yMean = Caculation.Min(pcIn.Y);
+            zMean = Caculation.Min(pcIn.Z);
+            //float[] x = pcIn.X
+            //    .Where(s => s < 2.5 && s > -1)
+            //    .Select(s => s - XMean).ToArray();
+            //float[] y = pcIn.Y
+            //    .Where(s => s < 0.5 && s > -1)
+            //    .Select(s => s - YMean).ToArray();
+            //float[] z = pcIn.Z
+            //    .Where(s => s < 3.5)
+            //    .Select(s => s - ZMean).ToArray();
+            //pointcloud = new PointcloudF(x, y, z);
+            pointcloud = pcIn;
         }
-        public void SetDraw(PointcloudF pcIn, float centerX, float centerY, float centerZ, DrawType drawType = DrawType.绘制点云)
+
+    }
+
+    class EventHandle
+    {
+        Camera cam;
+        Model model;
+        OpenGLControl openGLControl;
+        float zoomStep;
+
+        bool mouseDown;
+        int clickX, clickY;
+        public EventHandle(Camera cam, Model model,OpenGLControl openGLControl,float zoomStep= 0.1f)
         {
-            this.drawType = drawType;
-            currentX = centerX;
-            currentY = centerY;
-            currentZ = centerZ;
-            this.pointcloud = pcIn.Clone();
+            this.cam = cam;
+            this.model = model;
+            this.openGLControl = openGLControl;
+            this.zoomStep = zoomStep;
         }
-
-
-
-
-        protected void SW_MouseWheel(object sender, MouseEventArgs e)
+        public void SW_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta > 0)
             {
-                currentZ += 1;
+                cam.CamPosZ -= zoomStep;
             }
             else
             {
-                currentZ -= 1;
+                cam.CamPosZ += zoomStep;
             }
         }
-        protected void SW_MouseDown(object sender, MouseEventArgs e)
+        public void SW_MouseDown(object sender, MouseEventArgs e)
         {
-            isMouseDown = true;
+            mouseDown = true;
             clickX = e.X;
             clickY = e.Y;
         }
-
-        protected void SW_MouseMove(object sender, MouseEventArgs e)
+        public void SW_MouseMove(object sender, MouseEventArgs e)
         {
-            if (isMouseDown)
+            if (mouseDown)
             {
-                currentX = ddx + (e.X - clickX) * 1f / SW.Width;
-                currentY = ddy + (e.Y - clickY) * 1f / SW.Height;
+                //每次移动的图像距离
+                float yMove = (e.X - clickX)*1f / openGLControl.Width;
+                float xMove = (e.Y - clickY)*1f / openGLControl.Height;
+                clickX = e.X;
+                clickY = e.Y;
+                cam.RotateX += 180f * xMove;
+                cam.RotateY += 180f * yMove;
+                //    rotateX = ddx + (e.X - clickX) * 1f / openGLControl.Width;
+                //rotateY = ddy - (e.Y - clickY) * 1f / openGLControl.Height;
             }
         }
-        protected void SW_MouseUp(object sender, MouseEventArgs e)
+        public void SW_MouseUp(object sender, MouseEventArgs e)
         {
-            isMouseDown = false;
-            ddx = CurrentX;
-            ddy = CurrentY;
+            mouseDown = false;
         }
-        protected void SW_OpenGLDraw(object sender, RenderEventArgs args)
+        public void SW_OpenGLDraw(object sender, RenderEventArgs args)
         {
-            Draw();
-        }
-        protected void SW_OpenGLInit(object sender, EventArgs args)
-        {
-            OpenGL gl = SW.OpenGL;
-            //四个视图的缺省位置
-            viewDefaultPos.Add(new double[] { 1, 1, 2, 0, 0, 0, 0, 1, 0 });     //透视
-            viewDefaultPos.Add(new double[] { 0, 0, 2, 0, 0, 0, 0, 1, 0 });     //前视 
-            viewDefaultPos.Add(new double[] { 5, 0, 0, 0, 0, 0, 0, 1, 0 });     //左视
-            viewDefaultPos.Add(new double[] { 0, 13, 0, -1, 0, 0, 0, 1, 0 });   //顶视
-            lookatValue = (double[])viewDefaultPos[0].Clone();
-
-            lightColor.Add(new float[] { 1f, 0, 0, 1f });  //环境光(ambient light)
-            lightColor.Add(new float[] { 1f, 1f, 1f, 1f });  //漫射光(diffuse light)
-            lightColor.Add(new float[] { 1f, 1f, 1f, 1f });  //镜面反射光(specular light)
-
-            SetLightColor(gl);
-            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, lightPos);
-            gl.ColorMaterial(OpenGL.GL_FRONT, OpenGL.GL_DIFFUSE);//diffuse-漫反射光 ambient-环境光 
-            gl.Enable(OpenGL.GL_COLOR_MATERIAL);//使用物体颜色材质
-            gl.Enable(OpenGL.GL_LIGHTING);//使用灯光
-            gl.Enable(OpenGL.GL_LIGHT0);//使用0号灯光
-            gl.ClearColor(0, 0, 0, 0);
-        }
-        protected void SW_Resize(object sender, EventArgs e)
-        {
-            OpenGL gl = SW.OpenGL;
-
-            //  设置当前矩阵模式,对投影矩阵应用随后的矩阵操作
-            gl.MatrixMode(OpenGL.GL_PROJECTION);
-
-            // 重置当前指定的矩阵为单位矩阵,将当前的用户坐标系的原点移到了屏幕中心
-            gl.LoadIdentity();
-
-            // 创建透视投影变换
-            //
-            gl.Perspective(15.0f, SW.Width / SW.Height, 0, 0.5);
-
-            // 视点变换
-            //
-            gl.LookAt(CurrentX, CurrentY, CurrentZ, CurrentX, CurrentY, CurrentZ, 0, 1, 0);
-            // 设置当前矩阵为模型视图矩阵
-            gl.MatrixMode(OpenGL.GL_MODELVIEW);
-        }
-
-
-
-
-
-        /**绘制
-         * **/
-        private void Draw()
-        {
-            OpenGL gl = this.SW.OpenGL;
-            //清除深度缓存 
+            OpenGL gl = openGLControl.OpenGL;
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
-            //定义视野范围
-            gl.Viewport((int)CurrentX, (int)CurrentY, SW.Width, SW.Height);
             gl.LoadIdentity();
-            //依据设定的对象，读取数据
-            switch (drawType)
-            {
-                case DrawType.不绘制:
-                    break;
-                case DrawType.绘制点云:
-                    gl.Translate(CurrentX, CurrentY, CurrentZ);
-                    gl.Rotate(RotateX, RotateY, RotateZ);
-
-                    gl.Begin(model);
-                    AddPointclouds(gl);
-                    break;
-                case DrawType.绘制例子:
-                    gl.Translate(-1.5f, 0, -6);
-                    gl.Begin(model);
-                    AddSampleLine(gl);
-                    break;
-            }
+            // cam.CamPosZ = 2f * model.XMax;
+            // cam.UpdateRotate(gl,0.75f,-0.25f,1.75f);
+            cam.UpdateRotate(gl, model.XMean, model.ZMean, model.ZMean);
+            cam.UpdateMove(gl);
+            gl.Begin(OpenGL.GL_POINTS);
+            AddPointclouds(gl);
             gl.End();
+            //想绘制坐标轴，没有做好
+            //gl.Begin(OpenGL.GL_LINE);
+            //gl.Color(1, 0, 0);
+            //gl.Vertex(-5, 0, 0);
+            //gl.Color(1, 0, 0);
+            //gl.Vertex(5, 0, 0);
+            //gl.Color(1, 0, 0);
+            //gl.Vertex(0, -5, 0);
+            //gl.Color(1, 0, 0);
+            //gl.Vertex(0, 5, 0);
+            //gl.Color(1, 0, 0);
+            //gl.Vertex(0, 0, -5);
+            //gl.Color(1, 0, 0);
+            //gl.Vertex(0, 0, 5);
+            //gl.End();
+         
         }
-
-
-        /**添加模型
-         * **/
-        private void AddSampleLine(OpenGL gl)
+        public void SW_OpenGLInit(object sender, EventArgs args)
         {
-            //  gl.Color(0.0f, 1.0f, 0.50f);
-            for (int i = -1; i < 2; i++)
-            {
-                gl.Vertex(i, i, i);
-            }
+
         }
+        public void SW_Resize(object sender, EventArgs e)
+        {
+
+        }
+
+
         private void AddPointclouds(OpenGL gl)
         {
-            // gl.Color(0.0f, 1.0f, 0.50f);
             //是否绘制颜色
-            if (RenderColor)
+            if (model.RenderColor)
             {
-                //Vertex vertex;
-                //System.Drawing.Color color;
-                //for (int row = 0; row < 720; row++)
-                //    for (int col = 0; col < 1280; col++)
-                //    {
-                //        vertex = GetPoint(row, col);
-                //        if (vertex.x == 0 && vertex.y == 0 && vertex.z == 0) continue;
-                //        color = currentBmp.GetPixel(col, row);
-                //        gl.Color(color.R / 255, color.G / 255, color.B / 255);
-                //        gl.Vertex(vertex.x, vertex.y, vertex.z);
-                //    }
+
             }
             else
             {
-                for (int i = 0; i < Pointcloud.X.Length; i++)
+                for (int i = 0; i < model.Pointcloud.X.Length; i += model.Sample)
                 {
-                    SetVertex
-                          (gl, Pointcloud.X[i], Pointcloud.Y[i], Pointcloud.Z[i]);
+                    gl.Vertex
+                     (model.Pointcloud.X[i],
+                      model.Pointcloud.Y[i],
+                      model.Pointcloud.Z[i]);
                 }
             }
         }
-        private void SetVertex(OpenGL gl, float x, float y, float z)
-        {
-            gl.Vertex(x * zoom, y * zoom, z * zoom);
-        }
     }
-    public class SharpglWrapper: SharpglAction
-    {   
-        /**构造函数
-         * **/
+
+    public class SharpglWrapper
+    {
+        OpenGLControl SW;
+        Camera camera;
+        Model model;
+        EventHandle eventHandle;
         public SharpglWrapper(OpenGLControl window)
         {
             SW = window;
-            model = OpenGL.GL_POINTS;
-            drawType = DrawType.绘制例子;
-            AddEvent();
-            rotateX = -180f;
+            camera = new Camera();
+            model = new Model();
+            eventHandle = new EventHandle(camera, model, SW);
+
+            SW.OpenGLInitialized += new EventHandler(eventHandle.SW_OpenGLInit);
+            SW.OpenGLDraw += new RenderEventHandler(eventHandle.SW_OpenGLDraw);
+            SW.Resize += new EventHandler(eventHandle.SW_Resize);
         }
 
+        public void SetModelSample(int sample)
+        {
+            model.Sample = sample;
+        }
+
+        public void SetDraw(PointcloudF pcIn)
+        {
+            model.UpdateModel(pcIn);
+        }
+
+        /// <summary>
+        /// 注册鼠标拖动事件
+        /// </summary>
+        public void AddEventMove()
+        {
+            SW.MouseDown += new MouseEventHandler(eventHandle.SW_MouseDown);
+            SW.MouseMove += new MouseEventHandler(eventHandle.SW_MouseMove);
+            SW.MouseUp += new MouseEventHandler(eventHandle.SW_MouseUp);
+        }
+
+
+        /// <summary>
+        /// 注册鼠标滑轮事件
+        /// </summary>
+        public void AddEventZoom()
+        {
+            SW.MouseWheel += new MouseEventHandler(eventHandle.SW_MouseWheel);
+        }
     }
 }

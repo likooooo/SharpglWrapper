@@ -53,6 +53,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DebugRecord">
+      <HintPath>..\..\TimeRecord\TimeRecord\lib\DebugRecord.dll</HintPath>
+    </Reference>
     <Reference Include="PointcloudWrapper">
       <HintPath>..\..\PointcloudWrapper\PointcloudWrapper\lib\PointcloudWrapper.dll</HintPath>
     </Reference>
