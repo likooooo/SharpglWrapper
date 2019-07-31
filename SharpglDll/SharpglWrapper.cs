@@ -87,7 +87,7 @@ namespace SharpglWrapper
             y = 0;
             z = 5;
             rotateX = 0;
-            rotateY = 0;
+            rotateY = 0;    
             rotateZ = 180;
         }
         public void UpdateMove(OpenGL gl)
@@ -101,18 +101,9 @@ namespace SharpglWrapper
 
         public void UpdateRotate(OpenGL gl)
         {
-           gl.Rotate(-RotateX, -RotateY, -RotateZ);
-        }
-        public void UpdateRotate(OpenGL gl,float centerX,
-            float centerY,float centerZ)
-        {
-           
-           //gl.Ortho
             gl.Rotate(-RotateX, 1, 0, 0);
             gl.Rotate(-RotateY, 0, 1, 0);
-            //gl.Rotate(RotateX, centerX, centerY, centerZ);
-            //gl.Rotate(RotateY, centerX, centerY, centerZ);
-
+            gl.Rotate(-RotateZ, 0, 0, 1);
         }
     }
 
@@ -184,6 +175,12 @@ namespace SharpglWrapper
                 return zMean;
             }
         }
+
+        public float Scala
+        {
+            get;
+            set;
+        }
         public bool RenderColor
         {
             get; set;
@@ -216,6 +213,7 @@ namespace SharpglWrapper
             float[] y = x;
             float[] z = x;
             pointcloud = new PointcloudF(x, y, z);
+            Scala = 1;
         }
         
 
@@ -266,11 +264,11 @@ namespace SharpglWrapper
         {
             if (e.Delta > 0)
             {
-                cam.CamPosZ -= zoomStep;
+                model.Scala -= zoomStep;
             }
             else
             {
-                cam.CamPosZ += zoomStep;
+                model.Scala += zoomStep;
             }
         }
         public void SW_MouseDown(object sender, MouseEventArgs e)
@@ -305,8 +303,9 @@ namespace SharpglWrapper
             gl.LoadIdentity();
             // cam.CamPosZ = 2f * model.XMax;
             // cam.UpdateRotate(gl,0.75f,-0.25f,1.75f);
-            cam.UpdateRotate(gl, model.XMean, model.ZMean, model.ZMean);
+            cam.UpdateRotate(gl);
             cam.UpdateMove(gl);
+            gl.Scale(model.Scala, model.Scala, model.Scala);
             gl.Begin(OpenGL.GL_POINTS);
             AddPointclouds(gl);
             gl.End();
@@ -324,8 +323,7 @@ namespace SharpglWrapper
             //gl.Vertex(0, 0, -5);
             //gl.Color(1, 0, 0);
             //gl.Vertex(0, 0, 5);
-            //gl.End();
-         
+            //gl.End();        
         }
         public void SW_OpenGLInit(object sender, EventArgs args)
         {
@@ -383,6 +381,13 @@ namespace SharpglWrapper
         public void SetDraw(PointcloudF pcIn)
         {
             model.UpdateModel(pcIn);
+        }
+        public PointcloudF PointcloudF
+        {
+            get
+            {
+                return model.Pointcloud;
+            }
         }
 
         /// <summary>
