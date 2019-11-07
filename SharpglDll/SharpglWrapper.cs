@@ -109,7 +109,10 @@ namespace SharpglWrapper
 
     public class Model
     {
+        //采样
         private int sample;
+        //
+        private bool isRender;
         private float x1, x2, y1, y2, z1, z2,xMean,yMean,zMean;
         private PointcloudF pointcloud;
         public float XMin
@@ -229,16 +232,6 @@ namespace SharpglWrapper
             xMean = Caculation.Min(pcIn.X);
             yMean = Caculation.Min(pcIn.Y);
             zMean = Caculation.Min(pcIn.Z);
-            //float[] x = pcIn.X
-            //    .Where(s => s < 2.5 && s > -1)
-            //    .Select(s => s - XMean).ToArray();
-            //float[] y = pcIn.Y
-            //    .Where(s => s < 0.5 && s > -1)
-            //    .Select(s => s - YMean).ToArray();
-            //float[] z = pcIn.Z
-            //    .Where(s => s < 3.5)
-            //    .Select(s => s - ZMean).ToArray();
-            //pointcloud = new PointcloudF(x, y, z);
             pointcloud = pcIn;
         }
 
@@ -379,6 +372,10 @@ namespace SharpglWrapper
         }
 
         public void SetDraw(PointcloudF pcIn)
+        {
+            model.UpdateModel(pcIn);
+        }
+        public void SetDraw(PointcloudF pcIn, System.Drawing.Color color)
         {
             model.UpdateModel(pcIn);
         }

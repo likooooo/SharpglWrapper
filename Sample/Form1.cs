@@ -8,17 +8,47 @@ namespace Sample
 {
     public partial class Form1 : Form
     {
+        List<PointcloudF> pointArry;
+
+
+        private int currentPage;
+        public int CurrentPage
+        {
+            get
+            {
+                return currentPage;
+            }
+            set
+            {
+                if (value >= pointArry.Count)
+                    value = 0;
+                else if (value < 0)
+                    value = pointArry.Count - 1;
+                currentPage = value;
+                sharpgl.SetDraw(pointArry[currentPage]);
+            }
+        }
+        SharpglWrapper.SharpglWrapper sharpgl;
+
+
         public Form1()
         {
             InitializeComponent();
-            SharpglWrapper.SharpglWrapper sharpgl = new SharpglWrapper.SharpglWrapper(this.openGLControl1);
-            var arryX0 = OpenFile("绝缘子三维扫描系统_Htuple_x.txt");
-            var arryY0 = OpenFile("绝缘子三维扫描系统_Htuple_y.txt");
-            var arryZ0 = OpenFile("绝缘子三维扫描系统_Htuple_z.txt");
-            sharpgl.SetDraw(new PointcloudF(arryX0, arryY0, arryZ0));
+            sharpgl = new SharpglWrapper.SharpglWrapper(this.openGLControl1);
             sharpgl.AddEventMove();
             sharpgl.AddEventZoom();
-         }
+            pointArry = new List<PointcloudF>();
+            for (int i = 0; i < 12; i++)
+            {
+                pointArry.Add(
+                    new PointcloudF(
+                         OpenFile("X" + i.ToString() + ".txt"),
+                          OpenFile("Y" + i.ToString() + ".txt"),
+                           OpenFile("Z" + i.ToString() + ".txt"))
+                    );
+            }
+            currentPage = -1;
+        }
         public static float[] OpenFile(string path)
         {
             List<float> arry;
@@ -41,6 +71,13 @@ namespace Sample
                 }
             }
             return arry.ToArray();
+        }
+
+
+        private void BtnOpenFile_Click(object sender, EventArgs e)
+        {
+            CurrentPage++;
+            this.Text = "当前点云ID：" + CurrentPage.ToString();
         }
     }
 }

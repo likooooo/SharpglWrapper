@@ -30,30 +30,55 @@
         {
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.openGLControl1 = new SharpGL.OpenGLControl();
+            this.btnOpenFile = new System.Windows.Forms.Button();
+            this.trackBar1 = new System.Windows.Forms.TrackBar();
             ((System.ComponentModel.ISupportInitialize)(this.openGLControl1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.SuspendLayout();
             // 
             // openGLControl1
             // 
             this.openGLControl1.DrawFPS = false;
-            this.openGLControl1.Location = new System.Drawing.Point(40, 39);
+            this.openGLControl1.Location = new System.Drawing.Point(12, 12);
             this.openGLControl1.Name = "openGLControl1";
             this.openGLControl1.OpenGLVersion = SharpGL.Version.OpenGLVersion.OpenGL2_1;
             this.openGLControl1.RenderContextType = SharpGL.RenderContextType.DIBSection;
             this.openGLControl1.RenderTrigger = SharpGL.RenderTrigger.TimerBased;
             this.openGLControl1.Size = new System.Drawing.Size(457, 323);
             this.openGLControl1.TabIndex = 0;
+            //this.openGLControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.OpenGLControl1_MouseClick);
+            // 
+            // btnOpenFile
+            // 
+            this.btnOpenFile.Location = new System.Drawing.Point(12, 373);
+            this.btnOpenFile.Name = "btnOpenFile";
+            this.btnOpenFile.Size = new System.Drawing.Size(75, 23);
+            this.btnOpenFile.TabIndex = 1;
+            this.btnOpenFile.Text = "打开点云";
+            this.btnOpenFile.UseVisualStyleBackColor = true;
+            this.btnOpenFile.Click += new System.EventHandler(this.BtnOpenFile_Click);
+            // 
+            // trackBar1
+            // 
+            this.trackBar1.Location = new System.Drawing.Point(530, 43);
+            this.trackBar1.Name = "trackBar1";
+            this.trackBar1.Size = new System.Drawing.Size(258, 45);
+            this.trackBar1.TabIndex = 2;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.trackBar1);
+            this.Controls.Add(this.btnOpenFile);
             this.Controls.Add(this.openGLControl1);
             this.Name = "Form1";
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.openGLControl1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -61,6 +86,8 @@
 
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private SharpGL.OpenGLControl openGLControl1;
+        private System.Windows.Forms.Button btnOpenFile;
+        private System.Windows.Forms.TrackBar trackBar1;
     }
 }
 
