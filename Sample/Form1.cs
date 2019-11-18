@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using PointcloudWrapper;
+using SharpglWrapper;
 namespace Sample
 {
     public partial class Form1 : Form
     {
-        List<PointcloudF> pointArry;
+        List<SharpglPointcloud> pointArry;
 
 
         private int currentPage;
@@ -37,15 +38,16 @@ namespace Sample
             sharpgl = new SharpglWrapper.SharpglWrapper(this.openGLControl1);
             sharpgl.AddEventMove();
             sharpgl.AddEventZoom();
-            pointArry = new List<PointcloudF>();
-            for (int i = 0; i < 12; i++)
+            pointArry = new List<SharpglPointcloud>();
+            for (int i = 0; i < 3; i++)
             {
                 pointArry.Add(
-                    new PointcloudF(
+                    new SharpglPointcloud(
                          OpenFile("X" + i.ToString() + ".txt"),
                           OpenFile("Y" + i.ToString() + ".txt"),
                            OpenFile("Z" + i.ToString() + ".txt"))
                     );
+                pointArry[i].IsRenderColor = true;
             }
             currentPage = -1;
         }

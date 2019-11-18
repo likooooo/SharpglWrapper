@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Linq;
 using LK.Caculation;
+using System.Drawing;
 namespace SharpglWrapper
 {
 
-    public class Camera
+    //相机
+     class Camera
     {
         float x, y, z;
         float rotateX, rotateY, rotateZ;
@@ -107,149 +109,23 @@ namespace SharpglWrapper
         }
     }
 
-    public class Model
-    {
-        //采样
-        private int sample;
-        //
-        private bool isRender;
-        private float x1, x2, y1, y2, z1, z2,xMean,yMean,zMean;
-        private PointcloudF pointcloud;
-        public float XMin
-        {
-            get
-            {
-                return x1;
-            }
-        }
-        public float YMin
-        {
-            get
-            {
-                return y1;
-            }
-        }
-        public float ZMin
-        {
-            get
-            {
-                return z1;
-            }
-        }
-        public float XMax
-        {
-            get
-            {
-                return x2;
-            }
-        }
-        public float YMax
-        {
-            get
-            {
-                return y2;
-            }
-        }
-        public float ZMax
-        {
-            get
-            {
-                return z2;
-            }
-        }
-        public float XMean
-        {
-            get
-            {
-                return xMean;
-            }
-        }
-        public float YMean
-        {
-            get
-            {
-                return yMean;
-            }
-        }
-        public float ZMean
-        {
-            get
-            {
-                return zMean;
-            }
-        }
 
-        public float Scala
-        {
-            get;
-            set;
-        }
-        public bool RenderColor
-        {
-            get; set;
-        }
-        public int Sample
-        {
-            get
-            {
-                return sample;
-            }
-            set
-            {
-                if (value <= 0)
-                    throw new Exception("值不能小于0");
-                sample = value;
-            }
-        }
-        public PointcloudF Pointcloud
-        {
-            get
-            {
-                return pointcloud;
-            }
-        }
-
-        public Model()
-        {
-            sample = 5;
-            float[] x = new float[3] { -1, 0, 1 };
-            float[] y = x;
-            float[] z = x;
-            pointcloud = new PointcloudF(x, y, z);
-            Scala = 1;
-        }
-        
-
-        public void UpdateModel(PointcloudF pcIn)
-        {
-            
-            x1 = Caculation.Min(pcIn.X);//-1
-            y1 = Caculation.Min(pcIn.Y);//-1
-            z1 = Caculation.Min(pcIn.Z);//0
-            x2 = Caculation.Max(pcIn.X);//2.5
-            y2 = Caculation.Max(pcIn.Y);//0.5
-            z2 = Caculation.Max(pcIn.Z);//3.5
-            xMean = Caculation.Min(pcIn.X);
-            yMean = Caculation.Min(pcIn.Y);
-            zMean = Caculation.Min(pcIn.Z);
-            pointcloud = pcIn;
-        }
-
-    }
-
+    //事件集合
     class EventHandle
     {
         Camera cam;
-        Model model;
+        public SharpglPointcloud sharpglPointscloud;
         OpenGLControl openGLControl;
         float zoomStep;
 
         bool mouseDown;
         int clickX, clickY;
-        public EventHandle(Camera cam, Model model,OpenGLControl openGLControl,float zoomStep= 0.1f)
+
+
+        public EventHandle(Camera cam, SharpglPointcloud sharpglPointscloud, OpenGLControl openGLControl,float zoomStep= 0.1f)
         {
             this.cam = cam;
-            this.model = model;
+            this.sharpglPointscloud = sharpglPointscloud;
             this.openGLControl = openGLControl;
             this.zoomStep = zoomStep;
         }
@@ -257,11 +133,11 @@ namespace SharpglWrapper
         {
             if (e.Delta > 0)
             {
-                model.Scala -= zoomStep;
+                sharpglPointscloud.Scala -= zoomStep;
             }
             else
             {
-                model.Scala += zoomStep;
+                sharpglPointscloud.Scala += zoomStep;
             }
         }
         public void SW_MouseDown(object sender, MouseEventArgs e)
@@ -294,29 +170,12 @@ namespace SharpglWrapper
             OpenGL gl = openGLControl.OpenGL;
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
             gl.LoadIdentity();
-            // cam.CamPosZ = 2f * model.XMax;
-            // cam.UpdateRotate(gl,0.75f,-0.25f,1.75f);
             cam.UpdateRotate(gl);
             cam.UpdateMove(gl);
-            gl.Scale(model.Scala, model.Scala, model.Scala);
+            gl.Scale(sharpglPointscloud.Scala, sharpglPointscloud.Scala, sharpglPointscloud.Scala);
             gl.Begin(OpenGL.GL_POINTS);
-            AddPointclouds(gl);
-            gl.End();
-            //想绘制坐标轴，没有做好
-            //gl.Begin(OpenGL.GL_LINE);
-            //gl.Color(1, 0, 0);
-            //gl.Vertex(-5, 0, 0);
-            //gl.Color(1, 0, 0);
-            //gl.Vertex(5, 0, 0);
-            //gl.Color(1, 0, 0);
-            //gl.Vertex(0, -5, 0);
-            //gl.Color(1, 0, 0);
-            //gl.Vertex(0, 5, 0);
-            //gl.Color(1, 0, 0);
-            //gl.Vertex(0, 0, -5);
-            //gl.Color(1, 0, 0);
-            //gl.Vertex(0, 0, 5);
-            //gl.End();        
+            Draw(gl);
+            gl.End();       
         }
         public void SW_OpenGLInit(object sender, EventArgs args)
         {
@@ -328,64 +187,228 @@ namespace SharpglWrapper
         }
 
 
-        private void AddPointclouds(OpenGL gl)
+        /// <summary>
+        /// 绘制执行的代码,对应四种不同模式
+        /// </summary>
+        /// <param name="gl"></param>
+        private void Draw(OpenGL gl)
         {
-            //是否绘制颜色
-            if (model.RenderColor)
-            {
-
-            }
+            bool isRenderColor = sharpglPointscloud.IsRenderColor;
+            bool isComplex = sharpglPointscloud.IsComplex;
+            if (isRenderColor && isComplex)
+                DrawWindowColorCombine(gl);
+            else if (isRenderColor && !isComplex)
+                DrawWindowColor(gl);
+            else if (!isRenderColor && isComplex)
+                DrawWindowCombine(gl);
+            else if (!isRenderColor && !isComplex)
+                DrawWindow(gl);
             else
+                throw new Exception("在Opengl显示时发生预料之外的结果");
+        }
+        private void DrawWindow(OpenGL gl)
+        {
+            int loopCount = sharpglPointscloud.X.Length;
+            for (int i = 0; i < loopCount; i += sharpglPointscloud.Sample)
             {
-                for (int i = 0; i < model.Pointcloud.X.Length; i += model.Sample)
+                gl.Vertex
+                 (sharpglPointscloud.X[i],
+                  sharpglPointscloud.Y[i],
+                  sharpglPointscloud.Z[i]);
+            }
+        }
+        private void DrawWindowColor(OpenGL gl)
+        {
+            int loopCount = sharpglPointscloud.X.Length;
+            Color color = sharpglPointscloud.RenderColor[0];
+            for (int i = 0; i < loopCount; i += sharpglPointscloud.Sample)
+            {
+                gl.Color(color.R, color.G, color.B);
+                gl.Vertex
+                 (sharpglPointscloud.X[i],
+                  sharpglPointscloud.Y[i],
+                  sharpglPointscloud.Z[i]);
+            }
+        }
+        private void DrawWindowCombine(OpenGL gl)
+        {
+            int combineCount = sharpglPointscloud.ComplexPointcloud.Count;
+            for (int i = 0; i < combineCount; i++)
+            {
+                int pointCount = sharpglPointscloud.X.Length;
+                for (int j = 0; i < pointCount; j += sharpglPointscloud.Sample)
                 {
                     gl.Vertex
-                     (model.Pointcloud.X[i],
-                      model.Pointcloud.Y[i],
-                      model.Pointcloud.Z[i]);
+                     (sharpglPointscloud.X[j],
+                      sharpglPointscloud.Y[j],
+                      sharpglPointscloud.Z[j]);
                 }
             }
         }
+        private void DrawWindowColorCombine(OpenGL gl)
+        {
+            int combineCount = sharpglPointscloud.ComplexPointcloud.Count;
+            var colorList = sharpglPointscloud.RenderColor;
+            for (int i = 0; i < combineCount; i++)
+            {
+                int pointCount = sharpglPointscloud.X.Length;
+                for (int j = 0; i < pointCount; j += sharpglPointscloud.Sample)
+                {
+                    gl.Color(colorList[i].R, colorList[i].G, colorList[i].B);
+                    gl.Vertex
+                     (sharpglPointscloud.X[j],
+                      sharpglPointscloud.Y[j],
+                      sharpglPointscloud.Z[j]);
+                }
+            }
+
+        }
     }
 
+
+    //显示的模型
+    public class SharpglPointcloud : PointcloudF
+    {
+        //采样
+        int sample;
+        public int Sample
+        {
+            get
+            {
+                return sample;
+            }
+            set
+            {
+                if (value <= 0)
+                    throw new Exception("值不能小于0");
+                sample = value;
+            }
+        }
+
+        //伸缩值
+        public float Scala
+        {
+            get;
+            set;
+        }
+
+        //颜色
+        public bool IsRenderColor
+        {
+            get;set;
+        }
+        Color[] renderColor = new Color[6] { Color.Red, Color.Green, Color.Blue, Color.Cyan, Color.Yellow,Color.Brown };
+        public Color[] RenderColor
+        {
+            get
+            {
+                return renderColor.Take(complexPointcloud.Count).ToArray();
+            }
+        }
+
+
+        //是否为多个组合
+        List<SharpglPointcloud> complexPointcloud;
+        public List<SharpglPointcloud> ComplexPointcloud
+        {
+            get
+            {
+                return complexPointcloud;
+            }
+        }
+        public bool IsComplex
+        {
+            get
+            {
+                if (complexPointcloud.Count > 1)
+                    return true;
+                else
+                    return false;
+            }
+
+        }
+
+
+        public SharpglPointcloud() : base(new float[3] { -1, 0, 1 }, new float[3] { -1, 0, 1 }, new float[3] { -1, 0, 1 })
+        {
+            IsRenderColor = false;
+            sample = 1;
+            complexPointcloud = new List<SharpglPointcloud>();
+        }
+
+        public SharpglPointcloud(float[] x,float[] y,float[] z, float scala = 1, int sample = 1)
+            : base(x, y, z)
+        {
+            IsRenderColor = false;
+            this.sample = sample;
+            this.Scala = scala;
+            complexPointcloud = new List<SharpglPointcloud>();
+            complexPointcloud.Add(this);
+        }
+        public SharpglPointcloud(PointcloudF pointcloud, float scala = 1, int sample = 1)
+            : this(pointcloud.X, pointcloud.Y, pointcloud.Z)
+        {
+        }
+
+
+        //点云的组合
+        public void Combine(SharpglPointcloud pointcloud)
+        {
+            complexPointcloud.Add(pointcloud);
+        }
+        public void Combine(SharpglPointcloud[] pointclouds)
+        {
+            complexPointcloud.AddRange(pointclouds);
+        }
+    }
+
+
+    //外部调用
     public class SharpglWrapper
     {
         OpenGLControl SW;
         Camera camera;
-        Model model;
+        SharpglPointcloud initPointcloud;
         EventHandle eventHandle;
+
+
+        public SharpglWrapper(Control fatherControl)
+        {
+            SW = new OpenGLControl();
+            camera = new Camera();
+            initPointcloud = new SharpglPointcloud();
+            eventHandle = new EventHandle(camera, initPointcloud, SW);
+            SW.OpenGLInitialized += new EventHandler(eventHandle.SW_OpenGLInit);
+            SW.OpenGLDraw += new RenderEventHandler(eventHandle.SW_OpenGLDraw);
+            SW.Resize += new EventHandler(eventHandle.SW_Resize);
+            fatherControl.Controls.Add(SW);
+        }
+
         public SharpglWrapper(OpenGLControl window)
         {
             SW = window;
             camera = new Camera();
-            model = new Model();
-            eventHandle = new EventHandle(camera, model, SW);
+            initPointcloud = new SharpglPointcloud();
+            eventHandle = new EventHandle(camera, initPointcloud, SW);
 
             SW.OpenGLInitialized += new EventHandler(eventHandle.SW_OpenGLInit);
             SW.OpenGLDraw += new RenderEventHandler(eventHandle.SW_OpenGLDraw);
             SW.Resize += new EventHandler(eventHandle.SW_Resize);
         }
 
+
         public void SetModelSample(int sample)
         {
-            model.Sample = sample;
+            eventHandle.sharpglPointscloud.Sample = sample;
         }
 
-        public void SetDraw(PointcloudF pcIn)
+
+        public void SetDraw(SharpglPointcloud pcIn)
         {
-            model.UpdateModel(pcIn);
+            eventHandle. sharpglPointscloud = pcIn;
         }
-        public void SetDraw(PointcloudF pcIn, System.Drawing.Color color)
-        {
-            model.UpdateModel(pcIn);
-        }
-        public PointcloudF PointcloudF
-        {
-            get
-            {
-                return model.Pointcloud;
-            }
-        }
+
+
 
         /// <summary>
         /// 注册鼠标拖动事件
@@ -396,6 +419,13 @@ namespace SharpglWrapper
             SW.MouseMove += new MouseEventHandler(eventHandle.SW_MouseMove);
             SW.MouseUp += new MouseEventHandler(eventHandle.SW_MouseUp);
         }
+        public void RemoveEventMove()
+
+        {
+            SW.MouseDown -= new MouseEventHandler(eventHandle.SW_MouseDown);
+            SW.MouseMove -= new MouseEventHandler(eventHandle.SW_MouseMove);
+            SW.MouseUp -= new MouseEventHandler(eventHandle.SW_MouseUp);
+        }
 
 
         /// <summary>
@@ -404,6 +434,10 @@ namespace SharpglWrapper
         public void AddEventZoom()
         {
             SW.MouseWheel += new MouseEventHandler(eventHandle.SW_MouseWheel);
+        }
+        public void RemoveEventZoom()
+        {
+            SW.MouseWheel -= new MouseEventHandler(eventHandle.SW_MouseWheel);
         }
     }
 }
