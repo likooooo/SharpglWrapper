@@ -397,17 +397,39 @@ namespace SharpglWrapper
         }
 
 
+        /// <summary>
+        /// 设定窗体的采样
+        /// </summary>
+        /// <param name="sample"></param>
         public void SetModelSample(int sample)
         {
             eventHandle.sharpglPointscloud.Sample = sample;
         }
 
 
+
+        /// <summary>
+        /// 设置点云
+        /// </summary>
+        /// <param name="pcIn"></param>
         public void SetDraw(SharpglPointcloud pcIn)
         {
-            eventHandle. sharpglPointscloud = pcIn;
+            eventHandle.sharpglPointscloud = pcIn;
         }
 
+
+        /// <summary>
+        /// 获取当前窗体的点云
+        /// </summary>
+        /// <returns></returns>
+        public SharpglPointcloud GetPointcloud()
+        {
+            return eventHandle.sharpglPointscloud;
+        }
+        public List<SharpglPointcloud> GetPointclouds()
+        {
+            return eventHandle.sharpglPointscloud.ComplexPointcloud;
+        }
 
 
         /// <summary>

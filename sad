@@ -1,0 +1,29 @@
+[33mcommit 8b2c1350ef88f12c11f50ba894c39ef082b13943[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: like <462866046@qq.com>
+Date:   Tue Nov 19 01:46:42 2019 +0800
+
+    增加了SharpglPointcloud类，用于控制显示的颜色和组合体同时显示
+
+[33mcommit 46cba5cb358454b56c8fb00fd43fa4fac5ea7852[m
+Author: like <462866046@qq.com>
+Date:   Thu Nov 7 16:13:13 2019 +0800
+
+    添加颜色前的备份
+
+[33mcommit bec624128ac7cef050fb20938fb825faa7bd1aa5[m
+Author: like <462866046@qq.com>
+Date:   Wed Jul 31 20:27:51 2019 +0800
+
+    修改了点云显示时候的一点bug
+
+[33mcommit 6fa4c3852c21427152721627cd73793029bb5c1f[m
+Author: like <462866046@qq.com>
+Date:   Wed Jul 31 16:28:49 2019 +0800
+
+    重构ShaprglWrapper类，通过Camera,Model,EventHandle三个类，实现可视化控制
+
+[33mcommit 10b8a5409dd4d6792f59cab450975f5527ae91f8[m
+Author: like <462866046@qq.com>
+Date:   Tue Jul 23 22:09:31 2019 +0800
+
+    第一次提交
