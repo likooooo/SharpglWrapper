@@ -83,8 +83,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="draw\gl_EventHandle.cs" />
+    <Compile Include="draw\gl_Camera.cs" />
+    <Compile Include="gl_graw.cs" />
+    <Compile Include="draw\SharpglWindow.cs" />
+    <Compile Include="gl_object.cs" />
+    <Compile Include="gl_tuple.cs" />
+    <Compile Include="pointcloud\pc_texture.cs" />
+    <Compile Include="pointcloud\pc_verctor3.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SharpglWrapper.cs" />
+    <Compile Include="stl\stl_facet.cs" />
+    <Compile Include="stl\stl_io.cs" />
+    <Compile Include="stl\stl_trangle.cs" />
+    <Compile Include="verctor3.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
