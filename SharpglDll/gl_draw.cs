@@ -10,10 +10,27 @@ using System.Drawing;
 namespace SharpglWrapper
 {
 
-    public class gl_graw
+    public class gl_draw
     {
+
+
+
         //伸缩
-        internal double Scala;
+        double scala;
+        internal double Scala
+        {
+            get => scala;
+            set
+            {
+                scala = value;
+                //Gl_Param_Ortho = (data.BoundingBox.minX * scala,
+                //    data.BoundingBox.maxX * scala,
+                //    data.BoundingBox.minY * scala,
+                //    data.BoundingBox.maxY * scala,
+                //    data.BoundingBox.minZ * scala,
+                //    data.BoundingBox.maxZ * scala);
+            }
+        }
         internal double zoomStep;
 
         internal OpenGL Gl { get => WindowHandle.OpenGL; }
@@ -21,17 +38,14 @@ namespace SharpglWrapper
         public gl_Camera cam;
 
         public gl_tuple data;
-        //显示模式
-        public uint mod { get => data.drawMod; }
-        DrawEventHandler DrawEventHandler { get => data.DrawEventHandler; }
 
 
-        private gl_graw()
+        private gl_draw()
         {
-            Scala = 1;
+            scala = 1;
             zoomStep = 0.1;
         }
-        public gl_graw(Control fatherControl) : this()
+        public gl_draw(Control fatherControl) : this()
         {
             WindowHandle = new OpenGLControl();
             cam = new gl_Camera(Gl);
@@ -47,14 +61,14 @@ namespace SharpglWrapper
            
         }
 
-        internal gl_graw(OpenGLControl WindowHandle) : this()
+        public gl_draw(OpenGLControl WindowHandle) : this()
         {
             this.WindowHandle = WindowHandle;
             cam = new gl_Camera(Gl);
         }
         public void Draw()
         {
-            DrawEventHandler(Gl);
+            data.Draw(Gl);
         }
 
     }    

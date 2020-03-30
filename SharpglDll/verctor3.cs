@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpglWrapper
 {
-   public struct vector3
+   public class vector3
     {
         public double x, y, z;
         public vector3(string str)
@@ -16,7 +16,12 @@ namespace SharpglWrapper
             y = Convert.ToDouble(d[1]);
             z = Convert.ToDouble(d[2]);
         }
-
+        public vector3(string x,string y,string z)
+        {
+            this.x = Convert.ToDouble(x);
+            this.y = Convert.ToDouble(y);
+            this.z = Convert.ToDouble(z);
+        }
         public bool Equals(vector3 obj)
         {
             var a = this.ToDouble();
