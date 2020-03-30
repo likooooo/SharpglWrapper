@@ -8,10 +8,13 @@ namespace SharpglWrapper
     {
         public ascColor(string r, string g, string b) : base(r, g, b)
         { }
+      
     }
     public class ascPoint : vector3
     {
         public ascPoint(string x, string y, string z) : base(x, y, z)
+        { }
+        public ascPoint(double x, double y, double z) : base(x, y, z)
         { }
     }
     public class asc
@@ -41,6 +44,16 @@ namespace SharpglWrapper
                 }
             }
 
+            var x = this.X;
+            var y = this.Y;
+            var z = this.Z;
+            BoundingBox = (x.Min(), x.Max(), y.Min(), y.Max(), z.Min(), z.Max());
+        }
+        public asc(List<ascPoint> points)
+        {
+            this.ascPoint = points.ToArray().ToList();
+            ascColor[] ascColors = new ascColor[ascPoint.Count];
+            this.ascColor = ascColors.ToList();
             var x = this.X;
             var y = this.Y;
             var z = this.Z;

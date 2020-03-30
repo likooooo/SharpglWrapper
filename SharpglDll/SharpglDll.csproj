@@ -93,9 +93,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="stl\stl_dataFormat.cs" />
     <Compile Include="stl\stl.cs" />
-    <Compile Include="verctor3.cs" />
+    <Compile Include="vector3.cs" />
     <Compile Include="virtualCamera\CameraAttribute.cs" />
     <Compile Include="virtualCamera\RealsenseD435_Hardware_Attribute.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="threshold\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -25,7 +25,7 @@ namespace SharpglWrapper
         ascPoint[] ascPoints { get => asc.ascPoint.ToArray(); }
         ascColor[] ascColors { get => asc.ascColor.ToArray(); }
         public uint drawMod { get; private set; }
-
+        //显示图像的采样（for循环的步长）
         public uint sample { get; set; }
 
         public (double minX, double maxX, double minY, double maxY, double minZ, double maxZ)
@@ -56,6 +56,76 @@ namespace SharpglWrapper
             drawHandle = new draw_gl_object(DrawAsc);
             depthCloneHandle = () => new gl_object(asc);
             sample = 1;
+        }
+
+
+        //获取stl模型的视野表面的部分
+        public gl_object GetStlSurface(double camX, double camY, double camZ)
+        {
+            var stl_Trangle = this.stl_Trangle;
+            var stl_Facet = this.stl_Facet;
+            if (stl_Trangle == null) throw new Exception("obj不是stl数据");
+
+            vector3 viewVector = new vector3(0, 0, camZ);
+            //var res = stl_Facet.Select(s => viewVector.DotProduct(s) > 0).ToArray();
+            //int selectFacetCount = res.Select(s => s).Count();
+            var a = stl_Facet.Select((s, i) => (viewVector.DotProduct(s) > 0) ? i : -1)
+                .Where(s => s > 0).ToArray();
+            var facet = a.Select(s => stl_Facet[s]).ToList();
+            a = a.Select(s => s ).ToArray();
+            List<vector3> trangle = a.Select(s => stl_Trangle[s] as vector3).ToList();
+            //var b = a.Select(s => s * 2).ToArray();
+            //trangle.AddRange(b.Select(s => stl_Trangle[s] as vector3).ToList());
+            //var c = a.Select(s => s * 3).ToArray();
+            //trangle.AddRange(c.Select(s => stl_Trangle[s] as vector3).ToList());
+            var asctrangle = trangle.Select(s => new ascPoint(s.x, s.y, s.z)).ToList();
+
+            var surface = new asc(asctrangle);
+            return new gl_object(surface);
+
+            //int index = stl_Facet.Length;
+            //int selectCount = 0;
+            //for (int i = 0; i < index; i += loopStep)
+            //{
+            //    //if (i >= stl_Trangle.Length) break;
+            //    //向量点乘结果小于0,夹角为钝角
+            //    if (res[i])
+            //    {
+            //        facet[selectCount] = (stl_Facet[i]);
+            //        trangle[selectCount * 3] = stl_Trangle[i * 3];
+            //        trangle[selectCount * 3 + 1] = stl_Trangle[i * 3 + 1];
+            //        trangle[selectCount * 3 + 2] = stl_Trangle[i * 3 + 2];
+            //        selectCount++;
+            //        //trangle[indexOfTrangle].Add(stl_Trangle[indexOfTrangle]);
+            //        //trangle.Add(stl_Trangle[indexOfTrangle + 1]);
+            //        //trangle.Add(stl_Trangle[indexOfTrangle + 2]);
+            //    }
+            //}
+
+
+
+
+            ////效率太低
+            //List<stl_trangleVector> trangle = new List<stl_trangleVector>();
+            //List<stl_facetVector> facet = new List<stl_facetVector>();
+
+            //int index = stl_Facet.Length;
+            //int indexOfTrangle;
+            //for (int i = 0; i < index; i+= loopStep)
+            //{
+            //    if (i >= stl_Trangle.Length) break;
+            //    //向量点乘结果小于0,夹角为钝角
+            //    if (viewVector.DotProduct(stl_Facet[i]) < 0)
+            //    {
+            //        facet.Add(stl_Facet[i]);
+            //        indexOfTrangle = i * 3;
+            //        trangle.Add(stl_Trangle[indexOfTrangle]);
+            //        trangle.Add(stl_Trangle[indexOfTrangle + 1]);
+            //        trangle.Add(stl_Trangle[indexOfTrangle + 2]);
+            //    }
+            //}
+            //var stl = new stl(facet, trangle);
+            //return new gl_object(stl);
         }
 
         public gl_object DepthClone() => depthCloneHandle();

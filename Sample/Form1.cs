@@ -17,16 +17,25 @@ namespace Sample
         {
             InitializeComponent();
             //this.openGLControl1.OpenGLDraw += new SharpGL.RenderEventHandler(this.openGLControl1_OpenGLDraw);
+            //(int x, int y, int z)[] gg = { (1, 1, 1), (2, 2, 2), (3, 3, 3) };
+            //var v = gg.GetType().GetProperties().Select
+            //    (s => (
+            //             (((int, int, int))s.GetValue(gg)).GetType().GetProperties().Select
+            //             (ss => (
+            //                        (int)ss.GetValue(s)
+            //                )).ToList()
+            //          )
+            //    );
+
 
             Window = new SharpglWindow(this.openGLControl1);
-            {
-                var stl = new stl(@"C:\Users\lk\Desktop\点云样本\绝缘子带支架\绝缘子加三角支架中精.STL");
-                Window.Updata(new gl_object(stl));
-                Window.sample = 10;
-            }
+            var stl = new stl(@"C:\Users\lk\Desktop\点云样本\绝缘子带支架\绝缘子加三角支架中精.STL");
+            var obj = new gl_object(stl);
+            Window.Updata(obj);
+            Window.sample = 10;
 
-            var asc = new asc(@"C:\Users\lk\Desktop\点云样本\绝缘子带支架\facetPoints.txt");
-            gl_object model = new gl_object(asc);
+            gl_object model = obj.GetStlSurface(0,0,
+                Window.param_LookAt.eyez);
             Window1 = new SharpglWindow(this.openGLControl2, model);
             {
                 Window1.sample = 10;

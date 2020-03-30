@@ -74,7 +74,14 @@ namespace SharpglWrapper
             var z = this.Z;
             BoundingBox = (x.Min(), x.Max(), y.Min(), y.Max(), z.Min(), z.Max());
         }
-
+        public stl(stl_facetVector[] facet, stl_trangleVector[] trangle)
+        {
+            this.facetArry = facet.ToList();
+            this.pointsArry = trangle.ToList();
+        }
+        public stl(List<stl_facetVector> facet, List<stl_trangleVector> trangle)
+       : this(facet.ToArray(), trangle.ToArray())
+        { }
 
         public stl MoveModel2Zero()
         {

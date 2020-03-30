@@ -22,6 +22,13 @@ namespace SharpglWrapper
             this.y = Convert.ToDouble(y);
             this.z = Convert.ToDouble(z);
         }
+        public vector3(double x, double y, double z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
         public bool Equals(vector3 obj)
         {
             var a = this.ToDouble();
@@ -30,7 +37,8 @@ namespace SharpglWrapper
             //Array.Sort(b);
             return (a[0] == b[0] && a[1] == b[1] && a[2] == b[2]) ? true : false;
         }
-
+        //public static implicit operator ascPoint(vector3 obj)
+        //    => new ascPoint(obj.x, obj.y, obj.z);
 
         public override string ToString()
         {
@@ -38,7 +46,26 @@ namespace SharpglWrapper
         }
         public double[] ToDouble() { return new double[] { x, y, z }; }
 
+        //向量的模
+        public double GetDistance()
+        {
+            return (Math.Sqrt(x * x + y * y + z * z));
+        }
 
+        //向量的点乘
+        //v1*rightVector =x1*x2+y1*y2+z1*z2
+        public double DotProduct(vector3 rightVector)
+        {
+            return (x * rightVector.x + y * rightVector.y + z * rightVector.z);
+        }
+
+        //向量的夹角
+        // Cos(θ) = A·B /(|A|*|B|)
+        public double Cos(vector3 rightVector)
+        {
+            var cos = DotProduct(rightVector) / (GetDistance() + rightVector.GetDistance());
+            return cos;
+        }
         public static explicit operator double[](vector3 v) { return new double[] { v.x, v.y, v.z }; }
     }
 

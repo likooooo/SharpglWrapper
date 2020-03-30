@@ -312,6 +312,7 @@ namespace SharpglWrapper.Viewer
             GL.End();
         }
 
+
         //更新数据
         public void Updata(gl_object obj)
         {
