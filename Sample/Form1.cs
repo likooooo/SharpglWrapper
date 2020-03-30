@@ -39,6 +39,7 @@ namespace Sample
             Window1 = new SharpglWindow(this.openGLControl2, model);
             {
                 Window1.sample = 10;
+                Window1.param_LookAt = Window.param_LookAt;
             }
         }
 

@@ -228,6 +228,8 @@ namespace SharpglWrapper.Viewer
 
         public void SW_Resize(object sender, EventArgs e)
         {
+            viewer.UpdataWindow();
+
             viewer.param_Viewport.Flush(viewer.GL);
         }
         

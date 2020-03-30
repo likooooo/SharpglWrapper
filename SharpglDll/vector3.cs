@@ -66,6 +66,14 @@ namespace SharpglWrapper
             var cos = DotProduct(rightVector) / (GetDistance() + rightVector.GetDistance());
             return cos;
         }
+
+        //x,y,z
+        public (double degX, double degY, double zCos) GetProjectionDeg()
+        {
+            double degX = Math.Acos(x / z);
+            double degY = Math.Acos(y / z);
+            return (degX, degY, 0);
+        }
         public static explicit operator double[](vector3 v) { return new double[] { v.x, v.y, v.z }; }
     }
 

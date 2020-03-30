@@ -12,7 +12,9 @@ namespace SharpglWrapper.Viewer
     //窗体属性
     public struct Param_Viewport
     {
-        public int x, y, width, height;
+        public int x, y;
+        public int width { get; set; }
+        public int height { get; set; }
         public Param_Viewport(OpenGLControl windowHandle)
         {
             x = 0;
@@ -172,7 +174,7 @@ namespace SharpglWrapper.Viewer
         //opengl param
         public Param_Ortho param_Ortho { get; private set; }
         public Param_Viewport param_Viewport { get; private set; }
-        public Param_LookAt param_LookAt { get; private set; }
+        public Param_LookAt param_LookAt { get; set; }
         public Param_Light param_Light { get; private set; }
 
 
@@ -208,8 +210,8 @@ namespace SharpglWrapper.Viewer
             GL.LoadIdentity();
             GL.Scale(Scala, Scala, Scala);//缩放改成移动镜头
             param_Ortho.Flush(GL);
+            gl_GenCameraVisibleRange();
             param_LookAt.Flush(GL);
-
             //旋转：
             //1.模型移动至中心
             double xSub = (obj.BoundingBox.maxX + obj.BoundingBox.minX) - TranslateX;
@@ -228,7 +230,7 @@ namespace SharpglWrapper.Viewer
             GL.Translate(TranslateX, TranslateY, TranslateZ);     
             base.Flush(GL);
 
-            gl_GenCameraVisibleRange();
+
 
             ////测试
             //GL.Begin(OpenGL.GL_LINES);
@@ -245,7 +247,7 @@ namespace SharpglWrapper.Viewer
             //}
             //GL.End();
 
-
+            //param_LookAt.Flush(GL);
             GL.Flush();
         }
 
@@ -313,6 +315,10 @@ namespace SharpglWrapper.Viewer
         }
 
 
+        public void UpdataWindow()
+        {
+            param_Viewport = new Param_Viewport(windowHandle);
+        }
         //更新数据
         public void Updata(gl_object obj)
         {
