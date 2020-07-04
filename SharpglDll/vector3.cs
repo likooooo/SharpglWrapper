@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpglWrapper
 {
-   public class vector3
+    public class vector3
     {
         public double x, y, z;
         public vector3(string str)
@@ -16,7 +16,7 @@ namespace SharpglWrapper
             y = Convert.ToDouble(d[1]);
             z = Convert.ToDouble(d[2]);
         }
-        public vector3(string x,string y,string z)
+        public vector3(string x, string y, string z)
         {
             this.x = Convert.ToDouble(x);
             this.y = Convert.ToDouble(y);
@@ -39,6 +39,14 @@ namespace SharpglWrapper
         }
         //public static implicit operator ascPoint(vector3 obj)
         //    => new ascPoint(obj.x, obj.y, obj.z);
+        public static vector3 operator -(vector3 left, vector3 right)
+        {
+            return new vector3(left.x - right.x, left.y - right.y, left.z - right.z);
+        }
+        public static vector3 operator +(vector3 left, vector3 right)
+        {
+            return new vector3(left.x + right.x, left.y + right.y, left.z + right.z);
+        }
 
         public override string ToString()
         {
@@ -66,7 +74,7 @@ namespace SharpglWrapper
             var cos = DotProduct(rightVector) / (GetDistance() + rightVector.GetDistance());
             return cos;
         }
-
+   
         //x,y,z
         public (double degX, double degY, double zCos) GetProjectionDeg()
         {

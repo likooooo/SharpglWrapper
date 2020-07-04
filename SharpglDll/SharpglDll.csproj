@@ -57,9 +57,6 @@
     <Reference Include="DebugRecord">
       <HintPath>..\..\TimeRecord\TimeRecord\lib\DebugRecord.dll</HintPath>
     </Reference>
-    <Reference Include="LK.Caculation">
-      <HintPath>..\..\数据处理\lib\LK.Caculation.dll</HintPath>
-    </Reference>
     <Reference Include="PointcloudWrapper">
       <HintPath>..\..\PointcloudWrapper\PointcloudWrapper\lib\PointcloudWrapper.dll</HintPath>
     </Reference>
@@ -81,6 +78,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="ThreadWrapper">
+      <HintPath>..\..\ThreadWrapper\ThreadWrapper\lib\Debug\ThreadWrapper.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="asc\asc.cs" />

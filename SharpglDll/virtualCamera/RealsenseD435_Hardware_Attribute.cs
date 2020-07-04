@@ -31,7 +31,7 @@ namespace CameraAttribute
                 SensorResolutionWidth = 1280,
                 SensorResolutionHeight = 720,
                 FrameRate = 90,
-                FOV = new FOV() { H = 87, V = 58, D = 95 }
+                FOV = new FOV() { H = 87, V = 95, D = 58 }
             };
         }
     }

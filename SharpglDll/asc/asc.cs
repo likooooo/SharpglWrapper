@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System;
 
 namespace SharpglWrapper
 {
@@ -58,6 +59,36 @@ namespace SharpglWrapper
             var y = this.Y;
             var z = this.Z;
             BoundingBox = (x.Min(), x.Max(), y.Min(), y.Max(), z.Min(), z.Max());
+        }
+
+        //保存asc文件
+        public void save(string ascFilePath)
+        {
+            //if (File.Exists(ascFilePath))
+            //{
+            //    Console.WriteLine(ascFilePath + ":是否覆盖该文件：y/n");
+            //    while (true)
+            //    {
+            //        var key = Console.ReadKey();
+            //        if (key.Key == ConsoleKey.Y) break;
+            //        else if (key.Key == ConsoleKey.N) goto end;
+            //        Console.WriteLine("y/n?");
+            //    }
+            //}
+            if (ascPoint.Count <= 0) return;
+            using (StreamWriter sw = new StreamWriter(ascFilePath))
+            {
+                Console.WriteLine("正在写入stl文件：" + ascFilePath);
+                foreach (var v in ascPoint)
+                {
+                    string str = v.ToString();
+                    sw.WriteLine(str);
+                }
+                sw.WriteLine("End Clouds");
+                Console.WriteLine("asc文件写入完成...");
+            }
+            //end:;
+
         }
     }
 }

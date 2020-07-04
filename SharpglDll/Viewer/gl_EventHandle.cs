@@ -1,13 +1,6 @@
-﻿using PointcloudWrapper;
-using SharpGL;
+﻿using SharpGL;
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
-using System.Linq;
-using LK.Caculation;
-using System.Drawing;
-using SharpGL.Enumerations;
-using System.Threading;
 
 namespace SharpglWrapper.Viewer
 {

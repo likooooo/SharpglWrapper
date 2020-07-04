@@ -13,8 +13,8 @@ namespace SharpglWrapper.Viewer
     public struct Param_Viewport
     {
         public int x, y;
-        public int width { get; set; }
-        public int height { get; set; }
+        public int width;
+        public int height;
         public Param_Viewport(OpenGLControl windowHandle)
         {
             x = 0;
@@ -42,7 +42,8 @@ namespace SharpglWrapper.Viewer
             minY = boudingBox.minY - stepy;
             maxY = boudingBox.maxY + stepy;            
             maxZ = boudingBox.maxZ + stepz;
-            minZ = maxZ < 0 ? boudingBox.minZ : -maxZ;
+            minZ = boudingBox.minZ - stepz;
+            // minZ = maxZ < 0 ? boudingBox.minZ : -maxZ;
         }
 
         public void Flush(OpenGL gl)
@@ -59,9 +60,16 @@ namespace SharpglWrapper.Viewer
             eyey = (param_Ortho.maxY + param_Ortho.minY) / 2;
             eyez = 1.5 * obj.BoundingBox.maxZ;
 
-            //eyex = (obj.BoundingBox.maxX + obj.BoundingBox.minX) / 2;
-            //eyey = obj.BoundingBox.maxY;
-            //eyez = 1.5 * obj.BoundingBox.maxZ;
+            ////模型移到中心：
+            //GL.Translate(obj.BoundingBox.maxX - param_LookAt.eyex,
+            //    obj.BoundingBox.maxY - param_LookAt.eyey,
+            //    obj.BoundingBox.maxZ - param_LookAt.eyez);
+            //double dx = obj.BoundingBox.maxX - eyex;
+            //double dy = obj.BoundingBox.maxY - eyey;
+            //double dz = obj.BoundingBox.maxZ - eyez;
+            //eyex -= dx;
+            //eyey -= dy;
+            //eyez -= dz;
 
             centerx = eyex;//(param_Ortho.maxX + param_Ortho.minX) / 2;
             centery = eyey;//(param_Ortho.maxY + param_Ortho.minY) / 2;
@@ -179,8 +187,10 @@ namespace SharpglWrapper.Viewer
 
 
         //virtualCamera
+        //是否显示视锥
+        public bool displayViewRange { get;  set; }
         RealsenseD435_Hardware_Attribute d435 = new RealsenseD435_Hardware_Attribute();
-
+    
 
         public gl_Viewer(OpenGLControl WindowHandle, gl_object objModel) : base(objModel)
         {
@@ -209,9 +219,24 @@ namespace SharpglWrapper.Viewer
             GL.MatrixMode(OpenGL.GL_PROJECTION);
             GL.LoadIdentity();
             GL.Scale(Scala, Scala, Scala);//缩放改成移动镜头
+
+
             param_Ortho.Flush(GL);
-            gl_GenCameraVisibleRange();
             param_LookAt.Flush(GL);
+
+            //绘制坐标系
+            //gl_GenCoordinate();
+
+            //模型移到中心：
+            GL.Translate(obj.BoundingBox.maxX - param_LookAt.eyex,
+                obj.BoundingBox.maxY - param_LookAt.eyey,
+                obj.BoundingBox.maxZ - param_LookAt.eyez);
+
+            GL.Rotate(0, 45, 45);
+            //gl_GenBoundingbox();
+            //绘制可视线
+            //gl_GenCameraVisibleRange(displayViewRange);
+
             //旋转：
             //1.模型移动至中心
             double xSub = (obj.BoundingBox.maxX + obj.BoundingBox.minX) - TranslateX;
@@ -220,9 +245,6 @@ namespace SharpglWrapper.Viewer
             GL.Translate(xSub, ySub, zSub);
             //2.旋转
             GL.Rotate(RotateX, RotateY, RotateZ);
-            //GL.Rotate(RotateX, 1, 0, 0);
-            //GL.Rotate(RotateY, 0, 1, 0);
-            //GL.Rotate(RotateZ, 0, 0, 1);
             //3.移回来
             GL.Translate(-xSub, -ySub, -zSub);
 
@@ -230,47 +252,47 @@ namespace SharpglWrapper.Viewer
             GL.Translate(TranslateX, TranslateY, TranslateZ);     
             base.Flush(GL);
 
-
-
-            ////测试
-            //GL.Begin(OpenGL.GL_LINES);
-            //{
-            //    GL.Color(1, 0, 0);
-            //    GL.Vertex(param_LookAt.eyex, param_LookAt.eyey, param_LookAt.eyez);
-            //    GL.Vertex(param_Ortho.maxX, param_LookAt.eyey, param_LookAt.eyez);
-            //    GL.Color(0, 1, 0);
-            //    GL.Vertex(param_LookAt.eyex, param_LookAt.eyey, param_LookAt.eyez);
-            //    GL.Vertex(param_LookAt.eyex, param_Ortho.maxY, param_LookAt.eyez);
-            //    GL.Color(0, 0, 1);
-            //    GL.Vertex(param_LookAt.eyex, param_LookAt.eyey, param_LookAt.eyez);
-            //    GL.Vertex(param_LookAt.eyex, param_LookAt.eyey, param_Ortho.maxZ);
-            //}
-            //GL.End();
-
-            //param_LookAt.Flush(GL);
             GL.Flush();
         }
 
 
-        public void gl_GenCameraVisibleRange()
+        public void gl_GenCameraVisibleRange(bool displayViewRange)
         {
+            if (!displayViewRange) return;
             GL.LineWidth(1);
 
-            double camX = (obj.BoundingBox.maxX + obj.BoundingBox.minX) / 2;
-            double camY = (obj.BoundingBox.maxY + obj.BoundingBox.minY) / 2;
-            double camZ = 1.5 * obj.BoundingBox.maxZ;
-            double centerZ = (obj.BoundingBox.maxZ + obj.BoundingBox.minZ) / 2;
+            //double camX = (obj.BoundingBox.maxX + obj.BoundingBox.minX) / 2;
+            //double camY = (obj.BoundingBox.maxY + obj.BoundingBox.minY) / 2;
+            //double camZ = 1.5 * obj.BoundingBox.maxZ;
+            vector3 viewCenter = new vector3(param_LookAt.eyex - param_LookAt.centerx,
+                param_LookAt.eyey - param_LookAt.centery,
+                param_LookAt.eyez - param_LookAt.centerz);
+            double camX = param_LookAt.eyex;
+            double camY = param_LookAt.eyey;
+            double camZ = param_LookAt.eyez;
+            //double camX = viewCenter.x;
+            //double camY = viewCenter.y;
+            //double camZ = viewCenter.z;
+            //double dx = obj.BoundingBox.maxX - camX;
+            //double dy = obj.BoundingBox.maxY - camY;
+            //double dz = obj.BoundingBox.maxZ - camZ;
+            //camX += dx;
+            //camY += dy;
+            //camZ += dz;
 
             double h = d435.Depth.FOV.H;
             double v = d435.Depth.FOV.V;
             double d = d435.Depth.FOV.D;
+            h /= 2;
+            v /= 2;
             //上下线段，x=0
             double tan = Math.Tan(v);
             //y  /.
             //| / . ->maxY
             //|/v .
             //-------->z
-            double maxY = param_Ortho.maxZ * tan;
+            double length = viewCenter.z;
+            double maxY = length * tan;
             double minY = -maxY;
 
             //左右线段,y=0
@@ -284,37 +306,104 @@ namespace SharpglWrapper.Viewer
             //|  
             //x
             tan = Math.Tan(h);
-            double maxX = param_Ortho.maxZ * tan;
+            double maxX = length * tan;
             double minX = -maxX;
-            GL.Translate(obj.BoundingBox.maxX - param_LookAt.eyex,
-                obj.BoundingBox.maxY - param_LookAt.eyey,
-                obj.BoundingBox.maxZ - param_LookAt.eyez);
+
+        
             //绘制
             GL.Begin(OpenGL.GL_LINES);
             {
-                //GL.LookAt(camX, camY, camZ, camX, camY, centerZ, 0, 1, 0);
-
                 //相机-minY
                 GL.Color(1, 0, 0);
                 GL.Vertex(camX, camY, camZ);
-                GL.Vertex(0, minY, param_Ortho.maxZ);
+                GL.Vertex(0, minY, length);
                 //相机-maxY
                 GL.Color(0, 1, 0);
                 GL.Vertex(camX, camY, camZ);
-                GL.Vertex(0, maxY, param_Ortho.maxZ);
+                GL.Vertex(0, maxY, length);
                 //相机-minX
                 GL.Color(0, 0, 1);
                 GL.Vertex(camX, camY, camZ);
-                GL.Vertex(minX, 0, param_Ortho.maxZ);
+                GL.Vertex(minX, 0, length);
                 //相机-maxX
                 GL.Color(1, 1, 1);
                 GL.Vertex(camX, camY, camZ);
-                GL.Vertex(maxX, 0, param_Ortho.maxZ);
+                GL.Vertex(maxX, 0, length);
             }
             GL.End();
         }
 
+        void gl_GenCoordinate()
+        {
+            GL.LineWidth(1);
+            //绘制
+            GL.Begin(OpenGL.GL_LINES);
+            {
+                //X轴
+                GL.Color(1, 0, 0);
+                GL.Vertex(param_Ortho.minX, param_LookAt.eyey, param_LookAt.eyez);
+                //GL.Color(1, 0, 0);
+                GL.Vertex(param_Ortho.maxX, param_LookAt.eyey, param_LookAt.eyez);
+                //Y轴
+                GL.Color(0, 1, 0);
+                GL.Vertex(param_LookAt.eyex, param_Ortho.minY, param_LookAt.eyez);
+                //GL.Color(0, 1, 0);
+                GL.Vertex(param_LookAt.eyex, param_Ortho.maxY, param_LookAt.eyez);
+                //Z轴
+                GL.Color(0, 0, 1);
+                GL.Vertex(param_LookAt.eyex, 0, param_Ortho.minZ);
+                //GL.Color(0, 0, 1);
+                GL.Vertex(param_LookAt.eyex, 0, param_Ortho.maxZ);
 
+            }
+            GL.End();
+            GL.Flush();
+        }
+        void gl_GenBoundingbox()
+        {
+            //绘制外接矩形
+            (double xMin, double xMax, double yMin, double yMax, double zMin, double zMax) = obj.BoundingBox;
+            GL.Begin(OpenGL.GL_LINES);
+            {
+                GL.Color(0, 1, 1);
+                GL.Vertex(xMin, yMin, zMin);
+                GL.Vertex(xMax, yMin, zMin);
+
+                GL.Vertex(xMin, yMin, zMax);
+                GL.Vertex(xMax, yMin, zMax);
+
+                GL.Vertex(xMin, yMin, zMin);
+                GL.Vertex(xMin, yMin, zMax);
+
+                GL.Vertex(xMax, yMin, zMin);
+                GL.Vertex(xMax, yMin, zMax);
+                //上半区
+                GL.Vertex(xMin, yMax, zMin);
+                GL.Vertex(xMax, yMax, zMin);
+
+                GL.Vertex(xMin, yMax, zMax);
+                GL.Vertex(xMax, yMax, zMax);
+
+                GL.Vertex(xMin, yMax, zMin);
+                GL.Vertex(xMin, yMax, zMax);
+
+                GL.Vertex(xMax, yMax, zMin);
+                GL.Vertex(xMax, yMax, zMax);
+                //竖直
+                GL.Vertex(xMin, yMin, zMin);
+                GL.Vertex(xMin, yMax, zMin);
+
+                GL.Vertex(xMin, yMin, zMax);
+                GL.Vertex(xMin, yMax, zMax);
+
+                GL.Vertex(xMax, yMin, zMax);
+                GL.Vertex(xMax, yMax, zMax);
+
+                GL.Vertex(xMax, yMin, zMin);
+                GL.Vertex(xMax, yMax, zMin);
+            }
+            GL.End();
+        }
         public void UpdataWindow()
         {
             param_Viewport = new Param_Viewport(windowHandle);

@@ -18,6 +18,8 @@ namespace SharpglWrapper
     //各种模型显示，模型之间数据转换
     public class gl_object: I_gl_object
     {
+        public static int threadPointCount = 81920; //1280 * 64;
+ 
         asc asc;
         stl stl;
         stl_trangleVector[] stl_Trangle { get => stl.pointsArry.ToArray(); }
@@ -62,39 +64,82 @@ namespace SharpglWrapper
         //获取stl模型的视野表面的部分
         public gl_object GetStlSurface(double camX, double camY, double camZ)
         {
-            var stl_Trangle = this.stl_Trangle;
-            var stl_Facet = this.stl_Facet;
+            stl_trangleVector[] stl_Trangle = this.stl_Trangle;
+            stl_facetVector[] stl_Facet = this.stl_Facet;
             if (stl_Trangle == null) throw new Exception("obj不是stl数据");
 
-            vector3 viewVector = new vector3(0, 0, camZ);
-
-            //var a = stl_Facet.Select((s, i) => (viewVector.DotProduct(s) > 0) ? i : -1)
-            //    .Where(s => s > 0).ToArray();
-            //var facet = a.Select(s => stl_Facet[s]).ToList();
-            //a = a.Select(s => s ).ToArray();
-            //List<vector3> trangle = a.Select(s => stl_Trangle[s] as vector3).ToList();
-            ////var b = a.Select(s => s * 2).ToArray();
-            ////trangle.AddRange(b.Select(s => stl_Trangle[s] as vector3).ToList());
-            ////var c = a.Select(s => s * 3).ToArray();
-            ////trangle.AddRange(c.Select(s => stl_Trangle[s] as vector3).ToList());
-            //var asctrangle = trangle.Select(s => new ascPoint(s.x, s.y, s.z)).ToList();
-
-            //var surface = new asc(asctrangle);
-            //return new gl_object(surface);
+            vector3 viewVector = new vector3(camX, camY, camZ);
             CameraAttribute.RealsenseD435_Hardware_Attribute d435 =
                 new CameraAttribute.RealsenseD435_Hardware_Attribute();
-            var a = stl_Facet.Select(s => s.GetProjectionDeg()).Select((s, i) => (s.degX < d435.Depth.FOV.H &&
-             s.degX > -d435.Depth.FOV.H &&
-             s.degY < d435.Depth.FOV.V &&
-             s.degY > -d435.Depth.FOV.V) ? i : -1).Where(s => s > 0).ToArray();
-            var facet = a.Select(s => stl_Facet[s]).ToList();
-            List<vector3> trangle = a.Select(s => stl_Trangle[s] as vector3).ToList();
-            var b = a.Select(s => s * 2).ToArray();
-            trangle.AddRange(b.Select(s => stl_Trangle[s] as vector3).ToList());
-            var c = a.Select(s => s * 3).ToArray();
-            trangle.AddRange(c.Select(s => stl_Trangle[s] as vector3).ToList());
+
+            ////获取视野内的法向量-方法1
+            //vector3[] vec_Facet = stl_Facet.Select(s => s - viewVector).ToArray();
+            //var a = vec_Facet.Select(s => s.GetProjectionDeg()).Select((s, i) => (s.degX < d435.Depth.FOV.H &&
+            // s.degX > -d435.Depth.FOV.H &&
+            // s.degY < d435.Depth.FOV.V &&
+            // s.degY > -d435.Depth.FOV.V) ? i : -1).Where(s => s > 0).ToArray();
+            //var facet = a.Select(s => vec_Facet[s]).ToList();
+
+            //获取视野内的法向量-方法2
+            vector3[] vec_Facet = stl_Facet.Select(s => (vector3)s).ToArray();
+            var a = vec_Facet.Select(s => s.GetProjectionDeg()).Select((s, i) => (
+
+                //h-v+90
+                s.degX < d435.Depth.FOV.H &&
+                s.degX > -d435.Depth.FOV.H &&
+                s.degY < d435.Depth.FOV.V + 45 &&
+                s.degY > -d435.Depth.FOV.V + 45
+                &&
+                //h+90-v
+                s.degX < d435.Depth.FOV.H + 90 &&
+                s.degX > -d435.Depth.FOV.H + 90 &&
+                s.degY < d435.Depth.FOV.V &&
+                s.degY > -d435.Depth.FOV.V
+                 &&
+                //h-v
+                s.degX < d435.Depth.FOV.H &&
+                s.degX > -d435.Depth.FOV.H &&
+                s.degY < d435.Depth.FOV.V &&
+                s.degY > -d435.Depth.FOV.V
+                 &&
+                //x-h
+                s.degX < d435.Depth.FOV.H &&
+                s.degX > -d435.Depth.FOV.H
+                 &&
+                //y-v
+                s.degY < d435.Depth.FOV.V &&
+                s.degY > -d435.Depth.FOV.V
+                 &&
+                //y-v-45
+                s.degY < (d435.Depth.FOV.V - 45) &&
+                s.degY > (-d435.Depth.FOV.V - 45)
+                ) ? i : -1).Where(s => s > 0).ToArray();
+            var facet = a.Select(s => vec_Facet[s]).ToList();
+
+
+            //在视野内的点
+            List<vector3> trangle = a.Select(s => s * 3).
+                Select(s => stl_Trangle[s] as vector3).ToList();
+            trangle.AddRange(
+                a.Select(s => s * 3 + 1).
+                Select(s => stl_Trangle[s] as vector3).ToList()
+                );
+            trangle.AddRange(
+                a.Select(s => s * 3 + 2).
+                Select(s => stl_Trangle[s] as vector3).ToList()
+                );
+
+            ////原始点云
+            //trangle = stl_Trangle.Select(s => s as vector3).ToList();
+
+
             var asctrangle = trangle.Select(s => new ascPoint(s.x, s.y, s.z)).ToList();
             var surface = new asc(asctrangle);
+            surface.save(@"C:\Users\lk\Desktop\点云样本\绝缘子带支架\看向z轴hv.asc");
+            //surface.
+            //去重
+
+
             return new gl_object(surface);
         }
 
@@ -132,6 +177,12 @@ namespace SharpglWrapper
             var sample = this.sample;
             gl.Begin(OpenGL.GL_POINTS);
             {
+                int threadCount = ascPoints.Length / threadPointCount;
+
+                for (int i = 0; i < threadCount; i++)
+                {
+
+                }
                 for (uint i = 0; i < ascPoints.Length; i += sample)
                 {
                     //gl.Color(ascColors[i].x, ascColors[i].y, ascColors[i].z);
